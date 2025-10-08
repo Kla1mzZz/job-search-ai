@@ -45,7 +45,7 @@ class LLMPipeline:
             except Exception as e:
                 logger.error(f"[LLMPipeline] Failed to load model: {e}", exc_info=True)
                 raise
-    
+
     def generate(self, prompt: str, system_prompt: str) -> str:
         if not self.is_loaded:
             self.load_model()
@@ -90,5 +90,6 @@ class LLMPipeline:
         ]
 
         return response
+
 
 pipeline = LLMPipeline(config.llm_config)

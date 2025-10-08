@@ -17,5 +17,5 @@ RUN poetry install --no-interaction --no-ansi --no-root
 COPY src/ src/
 COPY models/ models/
 
-EXPOSE 8001
-CMD ["poetry", "run", "uvicorn", "src.llm_service.main:app", "--host", "0.0.0.0", "--port", "8001"]
+EXPOSE 8002
+CMD ["poetry", "run", "uvicorn", "src.job_scraper_service.main:app", "--host", "0.0.0.0", "--port", "8002"]

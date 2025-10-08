@@ -5,6 +5,7 @@ class ScraperRequest(BaseModel):
     query: str
     pages: int
 
+
 class Job(BaseModel):
     title: str
     company: str
@@ -12,6 +13,7 @@ class Job(BaseModel):
     salary: str
     description: str
     link: str
+
 
 class ScraperResponse(BaseModel):
     jobs: list[Job]

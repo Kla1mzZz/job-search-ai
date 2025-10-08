@@ -9,8 +9,8 @@ from typing import List, Dict, Optional
 BASE = "https://www.work.ua"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/127.0.0.0 Safari/537.36",
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/127.0.0.0 Safari/537.36",
     "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
     "Accept-Encoding": "gzip, deflate, br",
     "Referer": "https://www.google.com/",
@@ -43,7 +43,9 @@ def fetch_job_description(job_url: str, desc_limit: Optional[int] = None) -> str
         if response.status_code != 200:
             return ""
         soup = BeautifulSoup(response.text, "html.parser")
-        desc_div = soup.find("div", class_="card-body") or soup.find("div", class_="job-description")
+        desc_div = soup.find("div", class_="card-body") or soup.find(
+            "div", class_="job-description"
+        )
         if not desc_div:
             return ""
         text = desc_div.get_text("\n", strip=True)
@@ -55,7 +57,9 @@ def fetch_job_description(job_url: str, desc_limit: Optional[int] = None) -> str
         return ""
 
 
-def parse_workua(query: str, pages: int = 1, desc_limit: Optional[int] = None) -> List[Dict]:
+def parse_workua(
+    query: str, pages: int = 1, desc_limit: Optional[int] = None
+) -> List[Dict]:
     """
     Парсит вакансии с work.ua
     Args:
@@ -88,7 +92,9 @@ def parse_workua(query: str, pages: int = 1, desc_limit: Optional[int] = None) -
 
         for h2 in h2_tags:
             a = h2.find("a", href=True)
-            if not a or not re.search(r"(vacanc|vacancy|vacancies|jobs|job)", a["href"]):
+            if not a or not re.search(
+                r"(vacanc|vacancy|vacancies|jobs|job)", a["href"]
+            ):
                 continue
             link = urljoin(BASE, a["href"])
             title = a.get_text(strip=True)
@@ -99,7 +105,9 @@ def parse_workua(query: str, pages: int = 1, desc_limit: Optional[int] = None) -
             for _ in range(3):
                 if parent is None:
                     break
-                candidates.extend(parent.find_all(["p", "div", "span", "a"], recursive=False))
+                candidates.extend(
+                    parent.find_all(["p", "div", "span", "a"], recursive=False)
+                )
                 parent = parent.parent
             if not candidates:
                 sibs = [sib for sib in h2.next_siblings if hasattr(sib, "get_text")][:6]
@@ -109,17 +117,34 @@ def parse_workua(query: str, pages: int = 1, desc_limit: Optional[int] = None) -
                 text = c.get_text(" ", strip=True)
                 if not text:
                     continue
-                if re.search(r"\b(годин|години|днів|день|тому|ago|day|days)\b", text, flags=re.I) and not date:
+                if (
+                    re.search(
+                        r"\b(годин|години|днів|день|тому|ago|day|days)\b",
+                        text,
+                        flags=re.I,
+                    )
+                    and not date
+                ):
                     date = text
                     continue
                 if re.search(r"\bгрн\b|₴|UAH|\$\s?\d|€\s?\d", text) and not salary:
                     salary = text
                     continue
-                if not company and len(text.split()) <= 6 and not re.search(r"\d", text):
-                    if not re.search(r"повна|часткова|дистанц|remote|full-time|part-time", text, flags=re.I):
+                if (
+                    not company
+                    and len(text.split()) <= 6
+                    and not re.search(r"\d", text)
+                ):
+                    if not re.search(
+                        r"повна|часткова|дистанц|remote|full-time|part-time",
+                        text,
+                        flags=re.I,
+                    ):
                         company = text
                         continue
-                if not location and re.search(r"[,•]|Київ|Дистанц|Remote|Робота віддалено|м\.", text, flags=re.I):
+                if not location and re.search(
+                    r"[,•]|Київ|Дистанц|Remote|Робота віддалено|м\.", text, flags=re.I
+                ):
                     location = text
                     continue
                 if not snippet:
@@ -127,13 +152,15 @@ def parse_workua(query: str, pages: int = 1, desc_limit: Optional[int] = None) -
 
             description = fetch_job_description(link, desc_limit)
 
-            results.append({
-                "title": title,
-                "company": company or "-",
-                "location": location or "-",
-                "salary": salary or "-",
-                "link": link,
-                "description": description or "-",
-            })
+            results.append(
+                {
+                    "title": title,
+                    "company": company or "-",
+                    "location": location or "-",
+                    "salary": salary or "-",
+                    "link": link,
+                    "description": description or "-",
+                }
+            )
 
     return results

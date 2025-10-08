@@ -15,7 +15,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN poetry install --no-interaction --no-ansi --no-root
 
 COPY src/ src/
-COPY models/ models/
+COPY resources/ prompts/
 
 EXPOSE 8001
 CMD ["poetry", "run", "uvicorn", "src.llm_service.main:app", "--host", "0.0.0.0", "--port", "8001"]

@@ -1,0 +1,24 @@
+[project]
+name = "job-scraper-service"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kla1mzZ",email = "kla1mzz16@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "scikit-learn (>=1.7.2,<2.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "beautifulsoup4 (>=4.14.2,<5.0.0)",
+    "fastapi (>=0.118.0,<0.119.0)",
+    "ruff (>=0.13.2,<0.14.0)",
+    "brotli (>=1.1.0,<2.0.0)",
+]
+
+[tool.poetry]
+packages = [{include = "job_scraper_service", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

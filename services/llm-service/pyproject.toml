@@ -1,0 +1,25 @@
+[project]
+name = "llm-service"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kla1mzZ",email = "kla1mzz16@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "transformers (>=4.56.2,<5.0.0)",
+    "torch (>=2.8.0,<3.0.0)",
+    "fastapi (>=0.118.0,<0.119.0)",
+    "orjson (>=3.11.3,<4.0.0)",
+    "pydantic-settings (>=2.11.0,<3.0.0)",
+    "ruff (>=0.13.2,<0.14.0)",
+    "aiofiles (>=24.1.0,<25.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "llm_service", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

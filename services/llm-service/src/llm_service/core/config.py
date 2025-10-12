@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class LLMConfig(BaseModel):
-    model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    model_name: str = "qwen2.5:1.5b-instruct-q4_K_M"
     device: str | None = None
     max_new_tokens: int = 500
     temperature: float = 0.3

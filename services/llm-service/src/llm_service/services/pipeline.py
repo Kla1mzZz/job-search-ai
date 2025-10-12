@@ -1,6 +1,4 @@
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
+import ollama
 from src.llm_service.core.config import config, LLMConfig
 from src.llm_service.core.logger import logger
 
@@ -18,78 +16,50 @@ class LLMPipeline:
         if self._initialized:
             return
         self.config = config
-        self.model = None
-        self.tokenizer = None
-        self.device = config.device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.model_name = config.model_name
         self.is_loaded = False
         self._initialized = True
 
     def load_model(self):
-        if not self.is_loaded:
-            logger.info(
-                f"[LLMPipeline] Start loading {self.config.model_name} on {self.device}"
-            )
-            try:
-                self.tokenizer = AutoTokenizer.from_pretrained(
-                    self.config.model_name, use_fast=True
-                )
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.config.model_name
-                )
-                self.model.to(self.device)
-                self.model.eval()
-                self.is_loaded = True
-                logger.info(
-                    f"[LLMPipeline] Model {self.config.model_name} loaded on {self.device}"
-                )
-            except Exception as e:
-                logger.error(f"[LLMPipeline] Failed to load model: {e}", exc_info=True)
-                raise
+        try:
+            logger.info(f"[LLMPipeline] Checking Ollama model: {self.model_name}")
+            available_models = [m["model"] for m in ollama.list()["models"]]
+            if self.model_name not in available_models:
+                logger.info(f"[LLMPipeline] Pulling {self.model_name}...")
+                ollama.pull(self.model_name)
+            self.is_loaded = True
+            logger.info(f"[LLMPipeline] Model {self.model_name} is ready.")
+        except Exception as e:
+            logger.error(f"[LLMPipeline] Failed to load model: {e}", exc_info=True)
+            raise
 
-    def generate(self, prompt: str, system_prompt: str) -> str:
+    def generate(self, prompt: str, system_prompt: str = "") -> str:
         if not self.is_loaded:
             self.load_model()
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ]
+        try:
+            logger.info(f"[LLMPipeline] Generating with {self.model_name}")
 
-        text = self.tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            padding=True,
-            truncation=True,
-            max_length=1024,
-        )
-        model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                options={
+                    "temperature": self.config.temperature,
+                    "top_p": self.config.top_p,
+                    "num_predict": self.config.max_new_tokens,
+                },
+            )
 
-        with torch.inference_mode():
-            try:
-                generated_ids = self.model.generate(
-                    model_inputs.input_ids,
-                    max_new_tokens=self.config.max_new_tokens,
-                    attention_mask=model_inputs.attention_mask,
-                    temperature=self.config.temperature,
-                    top_k=self.config.top_k,
-                    top_p=self.config.top_p,
-                    eos_token_id=self.tokenizer.eos_token_id,
-                    pad_token_id=self.tokenizer.pad_token_id,
-                )
-            except Exception as e:
-                logger.error("LLM generation failed", exc_info=True)
-                return {"error": "Generation failed", "details": str(e)}
+            content = response["message"]["content"]
+            logger.info(f"[LLMPipeline] Generation completed successfully.")
+            return content
 
-        generated_ids = [
-            output_ids[len(input_ids) :]
-            for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-        ]
-        response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[
-            0
-        ]
-
-        return response
+        except Exception as e:
+            logger.error("LLM generation failed", exc_info=True)
+            return {"error": "Generation failed", "details": str(e)}
 
 
 pipeline = LLMPipeline(config.llm_config)
